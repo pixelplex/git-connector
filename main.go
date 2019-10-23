@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 	"strings"
+	"net/http"
 
-	"gopkg.in/go-playground/webhooks.v3"
-	"gopkg.in/go-playground/webhooks.v3/github"
+	"gopkg.in/go-playground/webhooks.v5/github"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 )
@@ -60,15 +60,23 @@ func main() {
 		}
 	}
 
-	hook := github.New(&github.Config{Secret: params.Secret})
+	hook, _ := github.New(github.Options.Secret(params.Secret))
 
-	hook.RegisterEvents(func(payload interface{}, header webhooks.Header) {
-		pl := payload.(github.PushPayload)
+	http.HandleFunc("/webhook2", func(w http.ResponseWriter, r *http.Request) {
+		payload, err := hook.Parse(r, github.PushEvent)
+		if err != nil {
+			if err == github.ErrEventNotFound {
+				fmt.Printf("EventNotFound")
+			}
+		}
+		switch payload.(type) {
 
-		UpdateGitlab(repo, pl.Ref)
-	}, github.PushEvent)
+		case github.PushPayload:
+			pl := payload.(github.PushPayload)
+			UpdateGitlab(repo, pl.Ref)
+		}
+	})
 
-	err = webhooks.Run(hook, fmt.Sprintf(":%s", params.Port), "/webhook")
-	CheckIfError(err)
+	http.ListenAndServe(":" +  params.Port, nil)
 
 }
