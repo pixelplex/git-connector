@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -19,6 +20,9 @@ type ServerParams struct {
 	GitHubUrl       string
 	GitLabUrl       string
 	DirPath         string
+	PrivKeyPath     string
+	Owner           string
+	Repository      string
 }
 
 // Names of params
@@ -30,6 +34,7 @@ const (
 	GitLabUrlParam  = "gitlab"
 
 	DirPathParam = "local-path"
+	PrivkeyParam = "privkey"
 )
 
 // Errors
@@ -41,10 +46,12 @@ var configFlags map[string]*flagData = map[string]*flagData{
 	portParam: &flagData{Value: "3000", Help: "server port"},
 	secretParam: &flagData{Value: "MySecret", Help: "secret of github webhook"},
 
-	GitHubUrlParam: &flagData{Value: "https://github.com/alex-suslikov/github-mirroing", Help: "GitHub URL for mirroring"},
-	GitLabUrlParam:  &flagData{Value: "git@gitlab.com:Cipa_Joe/github-mirroing.git", Help: "GitLab URL for mirroring"},
+	GitHubUrlParam: &flagData{Value: "git@github.com:alex-suslikov/registrator.git", Help: "GitHub URL for mirroring"},
+	GitLabUrlParam:  &flagData{Value: "git@gitlab.pixelplex.by:a.suslikov/registrator.git", Help: "GitLab URL for mirroring"},
 
 	DirPathParam: &flagData{Value: "/tmp/repo/", Help: "path to local directory"},
+
+	PrivkeyParam: &flagData{Value: "privkey.pem", Help: "path to private key file"},
 }
 
 func (sp *ServerParams) initServerParams() {
@@ -53,6 +60,15 @@ func (sp *ServerParams) initServerParams() {
 	sp.GitHubUrl  = configFlags[GitHubUrlParam].Value
 	sp.GitLabUrl  = configFlags[GitLabUrlParam].Value
 	sp.DirPath    = configFlags[DirPathParam].Value
+	sp.PrivKeyPath    = configFlags[PrivkeyParam].Value
+
+	str := strings.TrimPrefix(configFlags[GitHubUrlParam].Value, "git@github.com:")
+	str = strings.TrimSuffix(str, ".git")
+
+	strArr := strings.Split(str, "/")
+
+	sp.Owner = strArr[0]
+	sp.Repository = strArr[1]
 }
 
 func checkAllKeys() error {
