@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strings"
+	"strconv"
 
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -23,6 +24,9 @@ type ServerParams struct {
 	PrivKeyPath     string
 	Owner           string
 	Repository      string
+
+	AppID           int
+	InstallID       int
 }
 
 // Names of params
@@ -35,6 +39,9 @@ const (
 
 	DirPathParam = "local-path"
 	PrivkeyParam = "privkey"
+
+	AppIDParam = "app-id"
+	InstallIDParam = "installation-id"
 )
 
 // Errors
@@ -52,6 +59,9 @@ var configFlags map[string]*flagData = map[string]*flagData{
 	DirPathParam: &flagData{Value: "/tmp/repo/", Help: "path to local directory"},
 
 	PrivkeyParam: &flagData{Value: "privkey.pem", Help: "path to private key file"},
+
+	AppIDParam: &flagData{Value: "44467", Help: "Application ID from GitHub App"},
+	InstallIDParam: &flagData{Value: "3771539", Help: "Installation ID"},
 }
 
 func (sp *ServerParams) initServerParams() {
@@ -69,6 +79,15 @@ func (sp *ServerParams) initServerParams() {
 
 	sp.Owner = strArr[0]
 	sp.Repository = strArr[1]
+
+	appID, err := strconv.Atoi(configFlags[AppIDParam].Value)
+	CheckIfError(err)
+	
+	instID, err := strconv.Atoi(configFlags[InstallIDParam].Value)
+	CheckIfError(err)
+
+	sp.AppID = appID
+	sp.InstallID = instID
 }
 
 func checkAllKeys() error {
@@ -102,9 +121,6 @@ func (sp *ServerParams) ParseParams() error {
 	flag.Parse()
 
 	viper.BindPFlags(flag.CommandLine)
-
-	viper.SupportedExts = viper.SupportedExts[:0]
-	viper.SupportedExts = append(viper.SupportedExts, "yml")
 
 	if err := checkAllKeys(); err != nil {
 		return err

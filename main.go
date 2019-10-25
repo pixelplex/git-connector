@@ -46,7 +46,7 @@ func main() {
 
 	context := context.Background()
 
-	itr, err := ghinstallation.NewKeyFromFile(http.DefaultTransport, 44467, 3771539, params.PrivKeyPath)
+	itr, err := ghinstallation.NewKeyFromFile(http.DefaultTransport, int64(params.AppID), int64(params.InstallID), params.PrivKeyPath)
 	CheckIfError(err)
 
 	client := github.NewClient(&http.Client{Transport: itr})
