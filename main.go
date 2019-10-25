@@ -98,10 +98,11 @@ func main() {
 			if pl.ObjectAttributes.Status != "pending" && pl.ObjectAttributes.Status != "running" {
 				opt := github.UpdateCheckRunOptions{Name: "CheckRun", Status: github.String("completed"), Conclusion: github.String(conclDict[pl.ObjectAttributes.Status])}
 	
-				id := mapCheckRun[pl.ObjectAttributes.SHA]
-				client.Checks.UpdateCheckRun(context, params.Owner, params.Repository, id, opt)		
+				id, exist := mapCheckRun[pl.ObjectAttributes.SHA]
+				if exist == true {
+					client.Checks.UpdateCheckRun(context, params.Owner, params.Repository, id, opt)		
+				}
 			}
-
 		}
 	})
 
